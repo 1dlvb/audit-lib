@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="debug" strict="true"
+               name="XMLConfigTest" packages="org.apache.logging.log4j.test">
+    <filter type="ThresholdFilter" level="trace" />
+
+    <appenders>
+        <console name="STDOUT">
+            <Layout type="PatternLayout" pattern="%m %n" />
+        </console>
+    </appenders>
+
+    <loggers>
+        <root level="DEBUG">
+            <appenderRef ref="STDOUT" />
+        </root>
+    </loggers>
+
+</configuration>
