@@ -1,29 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration status="debug" strict="true"
-               name="XMLConfigTest" packages="org.apache.logging.log4j.test">
-    <filter type="ThresholdFilter" level="trace" />
+<Configuration status="WARN">
+    <Properties>
+        <Property name="auditlog.console.enabled">true</Property>
+        <Property name="auditlog.file.enabled">false</Property>
+    </Properties>
 
-    <appenders>
-        <console name="STDOUT">
-            <layout type="PatternLayout" pattern="%m %n" />
-        </console>
-        <rollingFile name="rollingFile"
-                     fileName="logs/log4j2.log"
-                     filePattern="logs/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz">
-            <patternLayout>
-                <pattern>%d %p %c{1.} [%t] %m%n</pattern>
-            </patternLayout>
-            <policies>
-                <timeBasedTriggeringPolicy interval = "5" />
-                <sizeBasedTriggeringPolicy
-                        size="250 KB" />
-            </policies>
-        </rollingFile>
-    </appenders>
-    <loggers>
-        <root level="INFO">
-            <appenderRef ref="STDOUT" />
-            <appenderRef ref="rollingFile" />
-        </root>
-    </loggers>
-</configuration>
+    <Appenders>
+        <Console name="ConsoleAppender" target="SYSTEM_OUT">
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+        </Console>
+
+        <File name="FileAppender" fileName="logs/app.log">
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+        </File>
+    </Appenders>
+
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="ConsoleAppender"/>
+            <AppenderRef ref="FileAppender"/>
+        </Root>
+    </Loggers>
+</Configuration>
