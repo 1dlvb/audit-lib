@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
@@ -23,10 +22,6 @@ public class AuditLogAspect {
 
     private static final Logger LOGGER = LogManager.getLogger(AuditLogAspect.class);
 
-    @Pointcut("execution(@AuditLog * *(..)) && @annotation(auditLog)")
-    private void auditLogPointcut(AuditLog auditLog) {
-    }
-
     /**
      * Performs logging of method execution details using the logging level specified in the AuditLog annotation.
      *
@@ -35,13 +30,13 @@ public class AuditLogAspect {
      * @return          the object returned by the target method, or null if the method returns void
      * @throws Throwable any exceptions thrown by the target method during execution
      */
-    @Around(value = "auditLogPointcut(auditLog)", argNames = "joinPoint, auditLog")
+    @Around("@annotation(auditLog)")
     public Object logMethodInfo(ProceedingJoinPoint joinPoint, AuditLog auditLog) throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         String methodName = signature.getMethod().getName();
         Object[] methodArgs = joinPoint.getArgs();
 
-        String methodArgsLog = methodArgs.length > 0 ? String.format("Args: %s",
+        String methodArgsLog = methodArgs != null && methodArgs.length > 0 ? String.format("Args: %s",
                 Arrays.toString(methodArgs)) : "No args";
 
         Level level = getLogLevel(auditLog.logLevel());
