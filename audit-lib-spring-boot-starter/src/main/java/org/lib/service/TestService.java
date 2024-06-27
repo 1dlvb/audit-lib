@@ -20,4 +20,14 @@ public class TestService {
         return (double) a / b;
     }
 
+    @AuditLog(logLevel = LogLevel.INFO)
+    public void printHello() {
+        System.out.println("Hello");
+    }
+
+    @AuditLog(logLevel = LogLevel.WARN)
+    public void throwIllegalArgumentException() {
+        throw new IllegalArgumentException();
+    }
+
 }
