@@ -1,5 +1,6 @@
 package org.lib.advice;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LogEvent;
@@ -51,6 +52,8 @@ public class AuditLogAspectTests {
         Assertions.assertTrue(logEvents.stream()
                 .anyMatch(event -> event.getMessage().getFormattedMessage().contains(
                         "Method name: performAction, Args: [expectedParam1], Return value: expectedParam1")));
+        Assertions.assertTrue(logEvents.stream()
+                .anyMatch(event -> event.getLevel().equals(Level.INFO)));
     }
     @Test
     public void testAuditLogAnnotationWithDebugLevelOnCalculateAvgMethodWithGivenTwoParameters() {
@@ -58,16 +61,43 @@ public class AuditLogAspectTests {
         Assertions.assertTrue(logEvents.stream()
                 .anyMatch(event -> event.getMessage().getFormattedMessage().contains(
                         "Method name: calculateAvg, Args: [1, 2], Return value: 0.5")));
+        Assertions.assertTrue(logEvents.stream()
+                .anyMatch(event -> event.getLevel().equals(Level.DEBUG)));
     }
     @Test
     public void testAuditLogAnnotationWithDebugLevelOnCalculateAvgMethodWithGivenTwoParametersProvidingToIllegalArgumentException() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> testService.calculateAvg(1, 0));
         for (LogEvent l: logEvents) {
             System.out.println(l.getMessage().getFormattedMessage());
         }
-        Assertions.assertThrows(IllegalArgumentException.class, () -> testService.calculateAvg(1, 0));
         Assertions.assertTrue(logEvents.stream()
                 .anyMatch(event -> event.getMessage().getFormattedMessage().contains(
-                        "Method name: calculateAvg, Args: [1, 0], Exception occurred: Possible zero division!")));
+                        "Method name: calculateAvg, Args: [1, 0]," +
+                                " Exception occurred: java.lang.IllegalArgumentException: Possible zero division!")));
+        Assertions.assertTrue(logEvents.stream()
+                .anyMatch(event -> event.getLevel().equals(Level.DEBUG)));
+    }
+
+    @Test
+    public void testAuditLogAnnotationWithInfoLevelOnPrintHelloMethodWithNoParameters() {
+        testService.printHello();
+        Assertions.assertTrue(logEvents.stream()
+                .anyMatch(event -> event.getMessage().getFormattedMessage().contains(
+                        "Method name: printHello, No args, Return type: void")));
+        Assertions.assertTrue(logEvents.stream()
+                .anyMatch(event -> event.getLevel().equals(Level.INFO)));
+    }
+
+    @Test
+    public void testAuditLogAnnotationWithWarnLevelOnThrowIllegalArgumentExceptionMethodWithNoParameters() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> testService.throwIllegalArgumentException());
+
+        Assertions.assertTrue(logEvents.stream()
+                .anyMatch(event -> event.getMessage().getFormattedMessage().contains(
+                        "Method name: throwIllegalArgumentException, No args," +
+                                " Exception occurred: java.lang.IllegalArgumentException")));
+        Assertions.assertTrue(logEvents.stream()
+                .anyMatch(event -> event.getLevel().equals(Level.WARN)));
     }
 
 }
