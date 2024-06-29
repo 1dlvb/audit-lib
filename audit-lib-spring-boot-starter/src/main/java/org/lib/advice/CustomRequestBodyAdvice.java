@@ -72,7 +72,9 @@ public class CustomRequestBodyAdvice implements RequestBodyAdvice {
                                 @NonNull Type targetType,
                                 @NonNull Class<? extends HttpMessageConverter<?>> converterType) {
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-        requestAttributes.setAttribute("INTERCEPTED_REQUEST_BODY", body, RequestAttributes.SCOPE_REQUEST);
+        if (requestAttributes != null) {
+            requestAttributes.setAttribute("INTERCEPTED_REQUEST_BODY", body, RequestAttributes.SCOPE_REQUEST);
+        }
         return body;
     }
 

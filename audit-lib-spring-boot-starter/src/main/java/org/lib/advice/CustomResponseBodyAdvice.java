@@ -57,7 +57,9 @@ public class CustomResponseBodyAdvice implements ResponseBodyAdvice<Object> {
 
         if (request instanceof ServletServerHttpRequest) {
             RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-            requestAttributes.setAttribute("INTERCEPTED_RESPONSE_BODY", body, RequestAttributes.SCOPE_REQUEST);
+            if (requestAttributes != null) {
+                requestAttributes.setAttribute("INTERCEPTED_RESPONSE_BODY", body, RequestAttributes.SCOPE_REQUEST);
+            }
         }
         return body;
     }
