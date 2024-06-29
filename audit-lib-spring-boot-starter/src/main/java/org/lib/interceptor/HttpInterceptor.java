@@ -31,7 +31,6 @@ import java.time.format.DateTimeFormatter;
 public class HttpInterceptor implements HandlerInterceptor {
 
     private static final Logger LOGGER = LogManager.getLogger(HttpInterceptor.class);
-    private static StringBuilder logBuilder = new StringBuilder();
 
     /**
      * Pre-handle method that logs the current date and time along with the HTTP method of the request.
@@ -46,9 +45,6 @@ public class HttpInterceptor implements HandlerInterceptor {
     public boolean preHandle(@NonNull HttpServletRequest request,
                              @NonNull HttpServletResponse response,
                              @NonNull Object handler) throws Exception {
-        logBuilder.append(getCurrentDateTime())
-                .append(" ")
-                .append(request.getMethod());
         return true;
     }
 
@@ -74,6 +70,11 @@ public class HttpInterceptor implements HandlerInterceptor {
                                 @NonNull Object handler,
                                 Exception ex)
             throws Exception {
+
+        StringBuilder logBuilder = new StringBuilder();
+        logBuilder.append(getCurrentDateTime())
+                .append(" ")
+                .append(request.getMethod());
         logBuilder.append(String.format(" Status code: %s", response.getStatus()));
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
         Object responseBody = requestAttributes != null
@@ -88,7 +89,6 @@ public class HttpInterceptor implements HandlerInterceptor {
             logBuilder.append(" Response body: ").append(responseBody);
         }
         LOGGER.log(getLogLevel(handler, AuditLogHttp.class), logBuilder);
-        logBuilder = new StringBuilder();
     }
 
     /**
@@ -103,22 +103,6 @@ public class HttpInterceptor implements HandlerInterceptor {
     }
 
     /**
-     * Utility method to check if the handler is annotated with a specific annotation.
-     *
-     * @param handler The handler (or controller method) to check
-     * @param clazz   The annotation class to check for
-     * @return boolean True if the handler is annotated with the specified annotation, false otherwise
-     */
-    private boolean isAnnotated(Object handler, Class clazz) {
-
-        if (handler instanceof HandlerMethod handlerMethod) {
-            Method method = handlerMethod.getMethod();
-            return (method.isAnnotationPresent(clazz));
-        }
-        return false;
-    }
-
-    /**
      * Utility method to get the log level specified by the {@link AuditLogHttp} annotation on the handler.
      *
      * @param handler The handler (or controller method) that may have the @AuditLogHttp annotation
@@ -126,10 +110,12 @@ public class HttpInterceptor implements HandlerInterceptor {
      * @return Level The log level specified by the annotation, or DEBUG if not specified
      */
     private Level getLogLevel(Object handler, Class clazz) {
-        if (isAnnotated(handler, clazz)) {
-            Method method = ((HandlerMethod) handler).getMethod();
-            AuditLogHttp auditLogHttp = method.getAnnotation(AuditLogHttp.class);
-            return LevelConverter.convertLevel(auditLogHttp.logLevel());
+        if (handler instanceof HandlerMethod handlerMethod) {
+            Method method = handlerMethod.getMethod();
+            if (method.isAnnotationPresent(clazz)) {
+                AuditLogHttp auditLogHttp = method.getAnnotation(AuditLogHttp.class);
+                return LevelConverter.convertLevel(auditLogHttp.logLevel());
+            }
         }
 
         return Level.DEBUG;
