@@ -1,6 +1,5 @@
 package org.lib.config;
 
-import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
@@ -15,7 +14,6 @@ import org.lib.advice.annotation.AuditLogHttp;
 import org.lib.appender.CustomConsoleAppender;
 import org.lib.appender.CustomFileAppender;
 import org.lib.interceptor.HttpInterceptor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -42,18 +40,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableAspectJAutoProxy
 @EnableConfigurationProperties(AuditLibProperties.class)
 @AutoConfigureAfter(WebMvcAutoConfiguration.class)
-@RequiredArgsConstructor
 @ConditionalOnClass({AuditLog.class, AuditLogHttp.class})
 public class AuditLibSpringBootStarterAutoConfiguration implements WebMvcConfigurer {
 
-    @Value("${auditlog.console.enabled}")
-    private boolean consoleLoggingEnabled;
 
-    @Value("${auditlog.file.enabled}")
-    private boolean fileLoggingEnabled;
+    private final AuditLibProperties properties;
 
-    @Value("${auditlog.file.path}")
-    private String logFilePath;
+    public AuditLibSpringBootStarterAutoConfiguration(AuditLibProperties properties) {
+        this.properties = properties;
+    }
 
     @Bean
     @ConditionalOnMissingBean
@@ -90,8 +85,9 @@ public class AuditLibSpringBootStarterAutoConfiguration implements WebMvcConfigu
 
         rootLoggerConfig.getAppenders().forEach((name, appender) -> rootLoggerConfig.removeAppender(name));
 
-        if (consoleLoggingEnabled) {
-            Appender consoleAppender = CustomConsoleAppender.createAppender(
+        if (properties.isConsoleEnabled()) {
+            Appender consoleAppender = CustomConsoleAppender
+                    .createAppender(
                     "ConsoleAppender",
                     null,
                     PatternLayout.newBuilder().withPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n").build(),
@@ -101,14 +97,14 @@ public class AuditLibSpringBootStarterAutoConfiguration implements WebMvcConfigu
             rootLoggerConfig.addAppender(consoleAppender, Level.ALL, null);
         }
 
-        if (fileLoggingEnabled) {
+        if (properties.isFileEnabled()) {
             CustomFileAppender fileAppender = CustomFileAppender.createAppender(
                     "FileAppender",
                     null,
                     PatternLayout.newBuilder().withPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n").build(),
                     true,
                     null);
-            fileAppender.setPath(logFilePath);
+            fileAppender.setPath(properties.getFilePath());
             fileAppender.start();
             rootLoggerConfig.addAppender(fileAppender, Level.ALL, null);
         }
