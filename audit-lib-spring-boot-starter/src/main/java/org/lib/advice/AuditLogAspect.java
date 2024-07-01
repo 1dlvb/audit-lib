@@ -1,3 +1,4 @@
+
 package org.lib.advice;
 
 import org.apache.logging.log4j.Level;
@@ -7,6 +8,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.lib.advice.annotation.AuditLog;
+import org.lib.util.LevelConverter;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -39,7 +42,7 @@ public class AuditLogAspect {
         String methodArgsLog = methodArgs != null && methodArgs.length > 0 ? String.format("Args: %s",
                 Arrays.toString(methodArgs)) : "No args";
 
-        Level level = getLogLevel(auditLog.logLevel());
+        Level level = LevelConverter.convertLevel(auditLog.logLevel());
 
         try {
             Object proceed = joinPoint.proceed();
@@ -56,22 +59,6 @@ public class AuditLogAspect {
                     methodName, methodArgsLog, throwable.getMessage());
             throw throwable;
         }
-    }
-
-    /**
-     * @param logLevel level of logging, passed from annotation
-     * @return log level accepted by the logger
-     */
-    private Level getLogLevel(LogLevel logLevel) {
-        return switch (logLevel) {
-            case DEBUG -> Level.DEBUG;
-            case ERROR -> Level.ERROR;
-            case INFO -> Level.INFO;
-            case WARN -> Level.WARN;
-            case FATAL -> Level.FATAL;
-            case OFF -> Level.OFF;
-            case TRACE -> Level.TRACE;
-        };
     }
 
 }
