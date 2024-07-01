@@ -31,7 +31,6 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @ConditionalOnClass({AuditLog.class})
 @EnableAspectJAutoProxy
 @EnableConfigurationProperties(AuditLibProperties.class)
-//@ConditionalOnProperty(prefix = "audit-lib-spring-boot-starter", name = )
 public class AuditLibSpringBootStarterAutoConfiguration {
 
 
@@ -44,10 +43,6 @@ public class AuditLibSpringBootStarterAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public AuditLogAspect auditLogAdvice() {
-        System.out.println("Properties loaded from application.properties:");
-        System.out.println("Console logging enabled: " + properties.isConsoleEnabled());
-        System.out.println("File logging enabled: " + properties.isFileEnabled());
-        System.out.println("Log file path: " + properties.getFilePath());
         configureLoggers();
         return new AuditLogAspect();
     }
