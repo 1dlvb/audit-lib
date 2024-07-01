@@ -10,9 +10,11 @@ import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+
 
 /**
  * Custom appender for logging to a file.
@@ -34,10 +36,19 @@ public class CustomFileAppender extends AbstractAppender {
     @Override
     public void append(LogEvent event) {
         final byte[] bytes = getLayout().toByteArray(event);
-        try (FileOutputStream outputStream = new FileOutputStream(path, true)) {
-            outputStream.write(bytes);
+        try {
+            File logFile = new File(path);
+            if (!logFile.getParentFile().exists()) {
+                logFile.getParentFile().mkdirs();
+            }
+            if (!logFile.exists()) {
+                logFile.createNewFile();
+            }
+            try (FileOutputStream fos = new FileOutputStream(logFile, true)) {
+                fos.write(bytes);
+            }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error while log file  creation.");
         }
     }
 
