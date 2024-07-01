@@ -1,4 +1,7 @@
-package org.lib.advice;
+
+package org.lib.advice.annotation;
+
+import org.lib.advice.LogLevel;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
