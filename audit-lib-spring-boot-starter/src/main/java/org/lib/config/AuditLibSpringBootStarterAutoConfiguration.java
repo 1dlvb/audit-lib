@@ -10,7 +10,6 @@ import org.lib.advice.AuditLogAspect;
 import org.lib.advice.annotation.AuditLog;
 import org.lib.appender.CustomConsoleAppender;
 import org.lib.appender.CustomFileAppender;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -32,20 +31,23 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @ConditionalOnClass({AuditLog.class})
 @EnableAspectJAutoProxy
 @EnableConfigurationProperties(AuditLibProperties.class)
+//@ConditionalOnProperty(prefix = "audit-lib-spring-boot-starter", name = )
 public class AuditLibSpringBootStarterAutoConfiguration {
 
-    @Value("${auditlog.console.enabled}")
-    private boolean consoleLoggingEnabled;
 
-    @Value("${auditlog.file.enabled}")
-    private boolean fileLoggingEnabled;
+    private final AuditLibProperties properties;
 
-    @Value("${auditlog.file.path}")
-    private String logFilePath;
+    public AuditLibSpringBootStarterAutoConfiguration(AuditLibProperties properties) {
+        this.properties = properties;
+    }
 
     @Bean
     @ConditionalOnMissingBean
     public AuditLogAspect auditLogAdvice() {
+        System.out.println("Properties loaded from application.properties:");
+        System.out.println("Console logging enabled: " + properties.isConsoleEnabled());
+        System.out.println("File logging enabled: " + properties.isFileEnabled());
+        System.out.println("Log file path: " + properties.getFilePath());
         configureLoggers();
         return new AuditLogAspect();
     }
@@ -61,8 +63,9 @@ public class AuditLibSpringBootStarterAutoConfiguration {
 
         rootLoggerConfig.getAppenders().forEach((name, appender) -> rootLoggerConfig.removeAppender(name));
 
-        if (consoleLoggingEnabled) {
-            Appender consoleAppender = CustomConsoleAppender.createAppender(
+        if (properties.isConsoleEnabled()) {
+            Appender consoleAppender = CustomConsoleAppender
+                    .createAppender(
                     "ConsoleAppender",
                     null,
                     PatternLayout.newBuilder().withPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n").build(),
@@ -72,14 +75,14 @@ public class AuditLibSpringBootStarterAutoConfiguration {
             rootLoggerConfig.addAppender(consoleAppender, Level.ALL, null);
         }
 
-        if (fileLoggingEnabled) {
+        if (properties.isFileEnabled()) {
             CustomFileAppender fileAppender = CustomFileAppender.createAppender(
                     "FileAppender",
                     null,
                     PatternLayout.newBuilder().withPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n").build(),
                     true,
                     null);
-            fileAppender.setPath(logFilePath);
+            fileAppender.setPath(properties.getFilePath());
             fileAppender.start();
             rootLoggerConfig.addAppender(fileAppender, Level.ALL, null);
         }
