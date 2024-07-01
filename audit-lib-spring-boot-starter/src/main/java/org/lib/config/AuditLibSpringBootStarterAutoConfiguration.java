@@ -7,14 +7,17 @@ import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.lib.advice.annotation.AuditLog;
 import org.lib.advice.CustomRequestBodyAdvice;
 import org.lib.advice.CustomResponseBodyAdvice;
-import org.lib.advice.aspect.AuditLogAspect;
+import org.lib.advice.AuditLogAspect;
+import org.lib.advice.annotation.AuditLogHttp;
 import org.lib.appender.CustomConsoleAppender;
 import org.lib.appender.CustomFileAppender;
 import org.lib.interceptor.HttpInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -40,6 +43,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableConfigurationProperties(AuditLibProperties.class)
 @AutoConfigureAfter(WebMvcAutoConfiguration.class)
 @RequiredArgsConstructor
+@ConditionalOnClass({AuditLog.class, AuditLogHttp.class})
 public class AuditLibSpringBootStarterAutoConfiguration implements WebMvcConfigurer {
 
     @Value("${auditlog.console.enabled}")
