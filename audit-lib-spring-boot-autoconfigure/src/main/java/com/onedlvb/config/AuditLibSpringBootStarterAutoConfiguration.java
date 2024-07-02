@@ -1,15 +1,15 @@
-package org.lib.config;
+package com.onedlvb.config;
 
+import com.onedlvb.advice.AuditLogAspect;
+import com.onedlvb.advice.annotation.AuditLog;
+import com.onedlvb.appender.CustomConsoleAppender;
+import com.onedlvb.appender.CustomFileAppender;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
-import org.lib.advice.AuditLogAspect;
-import org.lib.advice.annotation.AuditLog;
-import org.lib.appender.CustomConsoleAppender;
-import org.lib.appender.CustomFileAppender;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -30,7 +30,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @Configuration
 @ConditionalOnClass({AuditLog.class})
 @EnableAspectJAutoProxy
-@EnableConfigurationProperties(AuditLibProperties.class)
+@EnableConfigurationProperties(com.onedlvb.config.AuditLibProperties.class)
 public class AuditLibSpringBootStarterAutoConfiguration {
 
 

@@ -1,7 +1,8 @@
-package org.lib.config;
+package com.onedlvb.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
 
 /**
  * Class for handling properties for annotation
@@ -13,8 +14,8 @@ public class AuditLibProperties {
 
     private boolean consoleEnabled;
 
-    private boolean fileEnabled;
+    private boolean fileEnabled = true;
 
-    private String filePath;
+    private String filePath = "logs/app.log";
 
 }
