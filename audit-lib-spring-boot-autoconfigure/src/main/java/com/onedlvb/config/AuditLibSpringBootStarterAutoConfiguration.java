@@ -1,4 +1,11 @@
-package org.lib.config;
+package com.onedlvb.config;
+
+import com.onedlvb.advice.AuditLogAspect;
+import com.onedlvb.advice.annotation.AuditLog;
+import com.onedlvb.appender.CustomConsoleAppender;
+import com.onedlvb.appender.CustomFileAppender;
+import com.onedlvb.advice.CustomRequestBodyAdvice;
+import com.onedlvb.advice.CustomResponseBodyAdvice;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -6,10 +13,7 @@ import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
-import org.lib.advice.annotation.AuditLog;
-import org.lib.advice.CustomRequestBodyAdvice;
-import org.lib.advice.CustomResponseBodyAdvice;
-import org.lib.advice.AuditLogAspect;
+
 import org.lib.advice.annotation.AuditLogHttp;
 import org.lib.appender.CustomConsoleAppender;
 import org.lib.appender.CustomFileAppender;

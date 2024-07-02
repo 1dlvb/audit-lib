@@ -1,15 +1,13 @@
+package com.onedlvb.advice;
 
-package org.lib.advice;
-
+import com.onedlvb.advice.annotation.AuditLog;
+import com.onedlvb.util.LevelConverter;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.reflect.MethodSignature;
-import org.lib.advice.annotation.AuditLog;
-import org.lib.util.LevelConverter;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -35,8 +33,7 @@ public class AuditLogAspect {
      */
     @Around("@annotation(auditLog)")
     public Object logMethodInfo(ProceedingJoinPoint joinPoint, AuditLog auditLog) throws Throwable {
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        String methodName = signature.getMethod().getName();
+        String methodName = joinPoint.getSignature().getName();
         Object[] methodArgs = joinPoint.getArgs();
 
         String methodArgsLog = methodArgs != null && methodArgs.length > 0 ? String.format("Args: %s",
@@ -46,12 +43,12 @@ public class AuditLogAspect {
 
         try {
             Object proceed = joinPoint.proceed();
-            if (!signature.getReturnType().equals(void.class)) {
+            if (proceed != null) {
                 LOGGER.log(level, "Method name: {}, {}, Return value: {}",
                         methodName, methodArgsLog, proceed);
             } else {
-                LOGGER.log(level, "Method name: {}, {}, Return type: {}",
-                        methodName, methodArgsLog, signature.getReturnType());
+                LOGGER.log(level, "Method name: {}, {}, Return type: void",
+                        methodName, methodArgsLog);
             }
             return proceed;
         } catch (Throwable throwable) {

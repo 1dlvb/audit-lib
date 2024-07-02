@@ -1,5 +1,4 @@
-
-package org.lib.appender;
+package com.onedlvb.appender;
 
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.AbstractAppender;

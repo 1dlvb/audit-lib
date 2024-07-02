@@ -1,7 +1,7 @@
-package org.lib.util;
+package com.onedlvb.util;
 
+import com.onedlvb.advice.LogLevel;
 import org.apache.logging.log4j.Level;
-import org.lib.advice.LogLevel;
 
 /**
  * Utility class for converting level of logging from {@link LogLevel} to {@link Level}

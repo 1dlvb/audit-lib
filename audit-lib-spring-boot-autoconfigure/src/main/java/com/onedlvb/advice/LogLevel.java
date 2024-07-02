@@ -1,4 +1,4 @@
-package org.lib.advice;
+package com.onedlvb.advice;
 
 /**
  * Enum for all log levels
