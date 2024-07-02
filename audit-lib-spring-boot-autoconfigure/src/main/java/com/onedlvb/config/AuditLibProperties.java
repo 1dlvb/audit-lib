@@ -14,8 +14,8 @@ public class AuditLibProperties {
 
     private boolean consoleEnabled;
 
-    private boolean fileEnabled = true;
+    private boolean fileEnabled;
 
-    private String filePath = "logs/app.log";
+    private String filePath;
 
 }
