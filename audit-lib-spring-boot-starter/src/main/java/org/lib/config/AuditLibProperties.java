@@ -1,6 +1,5 @@
 package org.lib.config;
 
-import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -17,10 +16,5 @@ public class AuditLibProperties {
     private boolean fileEnabled;
 
     private String filePath;
-
-    @PostConstruct
-    private void init() {
-        System.out.println("props init");
-    }
 
 }
