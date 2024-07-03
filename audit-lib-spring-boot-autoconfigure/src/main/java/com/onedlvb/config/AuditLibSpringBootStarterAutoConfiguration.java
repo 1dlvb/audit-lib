@@ -1,21 +1,30 @@
 package com.onedlvb.config;
 
 import com.onedlvb.advice.AuditLogAspect;
+import com.onedlvb.advice.CustomRequestBodyAdvice;
+import com.onedlvb.advice.CustomResponseBodyAdvice;
 import com.onedlvb.advice.annotation.AuditLog;
+import com.onedlvb.advice.annotation.AuditLogHttp;
 import com.onedlvb.appender.CustomConsoleAppender;
 import com.onedlvb.appender.CustomFileAppender;
+import com.onedlvb.interceptor.HttpInterceptor;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
 
 /**
  * Class for autoconfiguring Spring Starter
@@ -28,10 +37,11 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
  * @author Matushkin Anton
  */
 @Configuration
-@ConditionalOnClass({AuditLog.class})
 @EnableAspectJAutoProxy
-@EnableConfigurationProperties(com.onedlvb.config.AuditLibProperties.class)
-public class AuditLibSpringBootStarterAutoConfiguration {
+@EnableConfigurationProperties(AuditLibProperties.class)
+@AutoConfigureAfter(WebMvcAutoConfiguration.class)
+@ConditionalOnClass({AuditLog.class, AuditLogHttp.class})
+public class AuditLibSpringBootStarterAutoConfiguration implements WebMvcConfigurer {
 
 
     private final AuditLibProperties properties;
@@ -45,6 +55,23 @@ public class AuditLibSpringBootStarterAutoConfiguration {
     public AuditLogAspect auditLogAdvice() {
         configureLoggers();
         return new AuditLogAspect();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public CustomResponseBodyAdvice customResponseBodyAdvice() {
+        return new CustomResponseBodyAdvice();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public CustomRequestBodyAdvice customRequestBodyAdvice() {
+        return new CustomRequestBodyAdvice();
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new HttpInterceptor());
     }
 
     /**
@@ -61,11 +88,11 @@ public class AuditLibSpringBootStarterAutoConfiguration {
         if (properties.isConsoleEnabled()) {
             Appender consoleAppender = CustomConsoleAppender
                     .createAppender(
-                    "ConsoleAppender",
-                    null,
-                    PatternLayout.newBuilder().withPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n").build(),
-                    true,
-                    null);
+                            "ConsoleAppender",
+                            null,
+                            PatternLayout.newBuilder().withPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n").build(),
+                            true,
+                            null);
             consoleAppender.start();
             rootLoggerConfig.addAppender(consoleAppender, Level.ALL, null);
         }

@@ -46,10 +46,10 @@ public class CustomConsoleAppender extends AbstractAppender {
     @PluginFactory
     public static CustomConsoleAppender createAppender(
             @PluginAttribute("name") String name,
-           @PluginElement("Filters") Filter filter,
-           @PluginElement("Layout") Layout<? extends Serializable> layout,
-           @PluginAttribute("ignoreExceptions") boolean ignoreExceptions,
-           @PluginElement("Properties") Property[] properties) {
+            @PluginElement("Filters") Filter filter,
+            @PluginElement("Layout") Layout<? extends Serializable> layout,
+            @PluginAttribute("ignoreExceptions") boolean ignoreExceptions,
+            @PluginElement("Properties") Property[] properties) {
         return new CustomConsoleAppender(name, filter, layout, ignoreExceptions, properties);
     }
 
