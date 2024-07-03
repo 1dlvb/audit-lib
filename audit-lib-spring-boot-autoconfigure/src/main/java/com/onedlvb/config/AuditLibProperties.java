@@ -12,10 +12,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "audit-lib-spring-boot-starter")
 public class AuditLibProperties {
 
-    private boolean consoleEnabled;
+    private boolean consoleEnabled = true;
 
-    private boolean fileEnabled = true;
+    private boolean fileEnabled;
 
-    private String filePath = "logs/app.log";
+    private String filePath;
 
 }

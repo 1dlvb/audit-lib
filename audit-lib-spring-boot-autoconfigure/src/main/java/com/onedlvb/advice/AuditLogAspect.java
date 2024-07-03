@@ -53,7 +53,7 @@ public class AuditLogAspect {
             return proceed;
         } catch (Throwable throwable) {
             LOGGER.log(level, "Method name: {}, {}, Exception occurred: {}",
-                    methodName, methodArgsLog, throwable.getMessage());
+                    methodName, methodArgsLog, throwable);
             throw throwable;
         }
     }

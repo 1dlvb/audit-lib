@@ -1,12 +1,12 @@
-package org.lib.interceptor;
+package com.onedlvb.interceptor;
 
+import com.onedlvb.advice.annotation.AuditLogHttp;
+import com.onedlvb.util.LevelConverter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lib.advice.annotation.AuditLogHttp;
-import org.lib.util.LevelConverter;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestAttributes;
@@ -24,7 +24,7 @@ import java.time.format.DateTimeFormatter;
  * To activate logging you should annotate your controller method with @AuditLogHttp annotation.
  * To specify where logs should be printed configure auditlog.console.enabled=, auditlog.file.enabled=,
  * auditlog.file.path=logs/app.log variables.
- * @see org.lib.advice.aspect.AuditLogAspect
+ * @see com.onedlvb.advice.AuditLogAspect
  * @author Matushkin Anton
  */
 @Component
