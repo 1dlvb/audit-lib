@@ -5,8 +5,10 @@ Audit-lib is a Java library that provides an annotation-based logging mechanism.
 ## Features
 
 - **Method Information Logging**: Automatically logs the method name, arguments, return value, and exceptions.
+- **HTTP Request and Response Logging**: Automatically logs details of HTTP requests and responses for annotated methods. 
 - **Flexible Configuration**: Configure logging output through `application.properties` with options for console and file outputs.
-- **Easy Integration**: Simple annotation-based setup to integrate with existing Java applications.
+- **Configurable Log Levels**: Specify the log level for logging using the `@AuditLogHttp` or `@AuditLog` annotation.
+- **Easy Integration**: Seamlessly integrate with Spring applications using a simple annotation-based setup.
 
 ## Getting Started
 
@@ -14,15 +16,14 @@ Audit-lib is a Java library that provides an annotation-based logging mechanism.
 Configure the logging preferences in your application.properties file:
 
 + Enable or disable console logging
-`auditlib.console.enabled=true`
-
+`audit-lib-spring-boot-starter.file-enabled=true`
 + Enable or disable file logging
-`auditlib.file.enabled=true`
-
+`audit-lib-spring-boot-starter.console-enabled=true`
 + Specify the file path for log output
-`auditlib.file.path=/path/to/logfile.log`
+`audit-lib-spring-boot-starter.file-path=path`
+
 ### Usage
-To use Audit-lib, simply annotate your methods with `@AuditLog`. Here's an example:
+To use Audit-lib, simply annotate your methods with `@AuditLog` or `@AuditLogHttp`. Here's an example:
 ```java
 import com.example.auditlib.annotation.AuditLog;
 
@@ -34,9 +35,25 @@ public class TransactionService {
     }
 }
 ```
+```java
+import com.onedlvb.advice.annotation.AuditLogHttp;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class PaymentController {
+
+    @AuditLogHttp
+    @PostMapping("/processPayment")
+    public PaymentResponse processPayment(PaymentRequest request) {
+        // method implementation
+    }
+}
+
+```
 ### Advanced Usage
 Setting the Log Level
-The `@AuditLog` annotation allows you to specify the log level for each method. To set the log level, pass the LogLevel enum to the annotation like so:
+The `@AuditLog` and `@AuditLogHttp` annotation allows you to specify the log level for each method. To set the log level, pass the LogLevel enum to the annotation like so:
 ```java
 import com.example.auditlib.annotation.AuditLog;
 import com.example.auditlib.annotation.LogLevel;
@@ -48,6 +65,23 @@ public class PaymentService {
         // method implementation
     }
 }
+```
+```java
+import com.onedlvb.advice.annotation.AuditLogHttp;
+import com.onedlvb.advice.LogLevel;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class PaymentController {
+
+    @AuditLogHttp(logLevel = LogLevel.INFO)
+    @PostMapping("/processPayment")
+    public PaymentResponse processPayment(PaymentRequest request) {
+        // method implementation
+    }
+}
+
 ```
 This will log the method execution details at the INFO level. You can choose from various log levels such as DEBUG, INFO, WARN, ERROR, etc., depending on your logging strategy.
 
