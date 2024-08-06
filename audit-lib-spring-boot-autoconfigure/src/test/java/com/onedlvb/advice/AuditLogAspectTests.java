@@ -2,6 +2,7 @@ package com.onedlvb.advice;
 
 import com.onedlvb.advice.annotation.AuditLog;
 import com.onedlvb.config.AuditLibProperties;
+import com.onedlvb.kafka.AuditProducer;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.junit.jupiter.api.Test;
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 public class AuditLogAspectTests {
 
     @Mock
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private AuditProducer producer;
     @Mock
     private AuditLibProperties auditLibProperties;
 
@@ -42,7 +42,7 @@ public class AuditLogAspectTests {
 
 
         try (MockedStatic<LogManager> mockedLogManager = mockStatic(LogManager.class)) {
-            AuditLogAspect auditLogAspect = new AuditLogAspect(kafkaTemplate, auditLibProperties);
+            AuditLogAspect auditLogAspect = new AuditLogAspect(producer, auditLibProperties);
             auditLogAspect.logMethodInfo(joinPoint, auditLog);
             Logger logger = mock(Logger.class);
             mockedLogManager.when(() -> LogManager.getLogger(AuditLogAspect.class)).thenReturn(logger);
@@ -70,7 +70,7 @@ public class AuditLogAspectTests {
         try (MockedStatic<LogManager> mockedLogManager = mockStatic(LogManager.class)) {
             mockedLogManager.when(() -> LogManager.getLogger(AuditLogAspect.class)).thenReturn(logger);
 
-            AuditLogAspect auditLogAspect = new AuditLogAspect(kafkaTemplate, auditLibProperties);
+            AuditLogAspect auditLogAspect = new AuditLogAspect(producer, auditLibProperties);
             auditLogAspect.logMethodInfo(joinPoint, auditLog);
 
             verify(logger).log(eq(Level.INFO), eq("Method name: {}, {}, Return type: void"),
@@ -97,7 +97,7 @@ public class AuditLogAspectTests {
         try (MockedStatic<LogManager> mockedLogManager = mockStatic(LogManager.class)) {
             mockedLogManager.when(() -> LogManager.getLogger(AuditLogAspect.class)).thenReturn(logger);
 
-            AuditLogAspect calculationAspect = new AuditLogAspect(kafkaTemplate, auditLibProperties);
+            AuditLogAspect calculationAspect = new AuditLogAspect(producer, auditLibProperties);
             calculationAspect.logMethodInfo(joinPoint, auditLog);
 
             when(joinPoint.proceed()).thenReturn(15);
