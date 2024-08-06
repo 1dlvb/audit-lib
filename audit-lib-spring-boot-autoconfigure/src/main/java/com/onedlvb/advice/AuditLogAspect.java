@@ -2,6 +2,7 @@ package com.onedlvb.advice;
 
 import com.onedlvb.advice.annotation.AuditLog;
 import com.onedlvb.config.AuditLibProperties;
+import com.onedlvb.kafka.AuditProducer;
 import com.onedlvb.util.LevelConverter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +13,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -38,7 +38,7 @@ public class AuditLogAspect {
     private String defaultTopic;
 
     @NonNull
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final AuditProducer producer;
 
     @NonNull
     private final AuditLibProperties properties;
@@ -76,7 +76,7 @@ public class AuditLogAspect {
 
     private void sendKafkaMessage(Map<String, String> message) {
         if (properties.isKafkaLogEnabled()) {
-            kafkaTemplate.send(defaultTopic, message.toString());
+            producer.sendMessage(defaultTopic, message);
         }
     }
 
