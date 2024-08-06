@@ -8,12 +8,15 @@ import com.onedlvb.advice.annotation.AuditLogHttp;
 import com.onedlvb.appender.CustomConsoleAppender;
 import com.onedlvb.appender.CustomFileAppender;
 import com.onedlvb.interceptor.HttpInterceptor;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -22,8 +25,14 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -43,6 +52,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @ConditionalOnClass({AuditLog.class, AuditLogHttp.class})
 public class AuditLibSpringBootStarterAutoConfiguration implements WebMvcConfigurer {
 
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String bootstrapServers;
 
     private final AuditLibProperties properties;
 
@@ -52,9 +63,9 @@ public class AuditLibSpringBootStarterAutoConfiguration implements WebMvcConfigu
 
     @Bean
     @ConditionalOnMissingBean
-    public AuditLogAspect auditLogAdvice() {
+    public AuditLogAspect auditLogAspect() {
         configureLoggers();
-        return new AuditLogAspect();
+        return new AuditLogAspect(kafkaTemplate(), properties);
     }
 
     @Bean
@@ -67,6 +78,25 @@ public class AuditLibSpringBootStarterAutoConfiguration implements WebMvcConfigu
     @ConditionalOnMissingBean
     public CustomRequestBodyAdvice customRequestBodyAdvice() {
         return new CustomRequestBodyAdvice();
+    }
+
+    @Bean
+    public Map<String, Object> producerConfig() {
+        HashMap<String, Object> props = new HashMap<>();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        return props;
+    }
+
+    @Bean
+    public ProducerFactory<String, String> producerFactory() {
+        return new DefaultKafkaProducerFactory<>(producerConfig());
+    }
+
+    @Bean
+    public KafkaTemplate<String, String> kafkaTemplate() {
+        return new KafkaTemplate<>(producerFactory());
     }
 
     @Override
