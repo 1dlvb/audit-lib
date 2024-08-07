@@ -45,7 +45,7 @@ public class AuditLogAspect {
 
     /**
      * Performs logging of method execution details using the logging level specified in the AuditLog annotation.
-     *
+     * <p>
      * @param joinPoint provides the context of the method execution
      * @param auditLog  the annotation containing logging settings for the method
      * @return          the object returned by the target method, or null if the method returns void
@@ -73,42 +73,85 @@ public class AuditLogAspect {
         }
     }
 
+    /**
+     * Performs sending messages to the kafka broker.
+     * <p>
+     * @param message message that should be sent to the Kafka
+     */
     private void sendKafkaMessage(Map<String, String> message) {
         if (properties.isKafkaLogEnabled()) {
             producer.sendMessage(defaultTopic, message);
         }
     }
 
+    /**
+     * @param message message, that should be sent to the Kafka
+     * @param returnValue return value of the method
+     */
     private void addReturnValueToMessage(Map<String, String> message, Object returnValue) {
         if (returnValue != null) {
             message.put("returnValue", returnValue.toString());
         }
     }
 
+    /**
+     * @param throwable exception, that should be added to the message
+     * @param message message, that should be sent to the Kafka
+     */
     private static void addExceptionToMessage(Throwable throwable, Map<String, String> message) {
         message.put("exception", String.valueOf(throwable));
     }
 
-    private void logMethodExecution(Level level, String methodName, String methodArgsLog, Object returnValue) {
+    /**
+     * Logs basic info about method annotated with @AuditLog annotation.
+     * <p>
+     * @param level logging level
+     * @param methodName name of the method to log
+     * @param methodArgs arguments of the method to log
+     * @param returnValue return value of method to log
+     */
+    private void logMethodExecution(Level level, String methodName, String methodArgs, Object returnValue) {
         if (returnValue != null) {
-            LOGGER.log(level, "Method name: {}, {}, Return value: {}", methodName, methodArgsLog, returnValue);
+            LOGGER.log(level, "Method name: {}, {}, Return value: {}", methodName, methodArgs, returnValue);
         } else {
-            LOGGER.log(level, "Method name: {}, {}, Return type: void", methodName, methodArgsLog);
+            LOGGER.log(level, "Method name: {}, {}, Return type: void", methodName, methodArgs);
         }
     }
 
-    private void logMethodWithException(Level level, String methodName, String methodArgsLog, Throwable throwable) {
+    /**
+     * Logs basic info about method and exception annotated with @AuditLog annotation.
+     * <p>
+     * @param level logging level
+     * @param methodName name of the method to log
+     * @param methodArgs arguments of the method to log
+     * @param throwable method execution exception
+     */
+    private void logMethodWithException(Level level, String methodName, String methodArgs, Throwable throwable) {
         LOGGER.log(level, "Method name: {}, {}, Exception occurred: {}",
                 methodName,
-                methodArgsLog,
+                methodArgs,
                 throwable.toString());
     }
 
+    /**
+     * Formats args of the method that should be logged.
+     * <p>
+     * If method has args method returns "Args: ...", otherwise "No args".
+     * @param methodArgs arguments to format
+     * @return formatted method arguments that should be logged
+     */
     private static String formatMethodArgs(Object[] methodArgs) {
         return methodArgs != null && methodArgs.length > 0 ? String.format("Args: %s",
                 Arrays.toString(methodArgs)) : "No args";
     }
 
+    /**
+     * Creates basic message for kafka.
+     * <p>
+     * @param methodName method name, that should be added to the kafka
+     * @param methodArgs arguments of the method, that should be added to the kafka
+     * @return initialized message
+     */
     private Map<String, String> createMessageForKafka(String methodName, String methodArgs) {
         Map<String, String> message = new LinkedHashMap<>();
         message.put("serviceName", applicationName);

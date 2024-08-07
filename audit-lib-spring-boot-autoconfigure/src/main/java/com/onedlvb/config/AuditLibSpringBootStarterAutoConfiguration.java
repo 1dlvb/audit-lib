@@ -40,9 +40,11 @@ import java.util.HashMap;
 /**
  * Class for autoconfiguring Spring Starter
  * <ul>
- *     <li>To turn on console logging set auditlog.console.enabled=true</li>
- *     <li>To turn on file logging set auditlog.file.enabled=true</li>
- *     <li>To specify file for logs set auditlog.file.path=path...</li>
+ *     <li>To turn on console logging set audit-lib-spring-boot-starter..console-enabled=true</li>
+ *     <li>To turn on file logging set audit-lib-spring-boot-starter.file-enabled=true</li>
+ *     <li>To turn on messaging to kafka set audit-lib-spring-boot-starter.kafka-log-enabled=true</li>
+ *     <li>Set up the path for logs: audit-lib-spring-boot-starter.file-path=...</li>
+ *     <li>Set up the transactional id: audit-lib-spring-boot-starter.kafka-transactional-id=yourID</li>
  * </ul>
  * Configure these variables in application.properties file.
  * @author Matushkin Anton
