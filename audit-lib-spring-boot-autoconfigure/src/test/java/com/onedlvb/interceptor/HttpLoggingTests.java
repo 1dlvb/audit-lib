@@ -111,7 +111,7 @@ class HttpLoggingTests {
         @GetMapping("/get-with-two-args-returns-double")
         public String getMappingWithNoArgsReturnsStringMethod(@RequestParam("arg1") Integer arg1,
                                                               @RequestParam("arg2") Integer arg2) {
-            return String.valueOf((double)arg1/arg2)    ;
+            return String.valueOf((double) arg1 / arg2);
         }
 
 
