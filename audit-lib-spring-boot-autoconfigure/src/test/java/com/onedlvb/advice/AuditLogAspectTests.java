@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SpringExtension.class)
-public class AuditLogAspectTests {
+class AuditLogAspectTests {
 
     @Mock
     private AuditProducer producer;
@@ -31,7 +31,7 @@ public class AuditLogAspectTests {
 
 
     @Test
-    public void testMethodInvocationWhenExceptionThrownAndCorrectExceptionLogged() {
+    void testMethodInvocationWhenExceptionThrownAndCorrectExceptionLogged() {
         ProceedingJoinPoint joinPoint = mock(ProceedingJoinPoint.class);
         Signature signature = mock(Signature.class);
         when(joinPoint.getSignature()).thenReturn(signature);
@@ -58,7 +58,7 @@ public class AuditLogAspectTests {
         }
     }
     @Test
-    public void testIsVoidMethodWithNoArgsGeneratesProperLog() {
+    void testIsVoidMethodWithNoArgsGeneratesProperLog() {
         ProceedingJoinPoint joinPoint = mock(ProceedingJoinPoint.class);
         Signature signature = mock(Signature.class);
         Logger logger = mock(Logger.class);
@@ -83,7 +83,7 @@ public class AuditLogAspectTests {
     }
 
     @Test
-    public void testIsIntegerMethodWithTwoArgsGeneratesProperLog() throws Throwable {
+    void testIsIntegerMethodWithTwoArgsGeneratesProperLog() throws Throwable {
         ProceedingJoinPoint joinPoint = mock(ProceedingJoinPoint.class);
         Signature signature = mock(Signature.class);
         Logger logger = mock(Logger.class);
