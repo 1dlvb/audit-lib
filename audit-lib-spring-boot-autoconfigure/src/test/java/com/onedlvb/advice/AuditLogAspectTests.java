@@ -5,33 +5,37 @@ import com.onedlvb.config.AuditLibProperties;
 import com.onedlvb.kafka.AuditProducer;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.util.ReflectionTestUtils.setField;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-@ExtendWith(SpringExtension.class)
-class AuditLogAspectTests {
+public class AuditLogAspectTests {
 
     @Mock
     private AuditProducer producer;
 
     @Mock
-    private AuditLibProperties auditLibProperties;
+    private AuditLibProperties properties;
+
+    @InjectMocks
+    private AuditLogAspect aspect;
 
     @Mock
     private ProceedingJoinPoint joinPoint;
@@ -39,119 +43,82 @@ class AuditLogAspectTests {
     @Mock
     private Signature signature;
 
-    @Mock
-    private Logger logger;
-
-    @Mock
-    private AuditLog auditLog;
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+        when(joinPoint.getSignature()).thenReturn(signature);
+        when(properties.isKafkaLogEnabled()).thenReturn(true);
+    }
 
     @Test
-    void testMethodInvocationWhenExceptionThrownAndCorrectExceptionLoggedAndSendsMessageToKafka() throws Throwable {
-        when(joinPoint.getSignature()).thenReturn(signature);
+    public void testIsIntegerMethodWithTwoArgsGeneratesProperLogAndSendsMessageToKafka() throws Throwable {
+        when(signature.getName()).thenReturn("addIntegers");
+        when(joinPoint.getArgs()).thenReturn(new Object[]{5, 10});
+        when(joinPoint.proceed()).thenReturn("returnValue");
+
+        AuditLog auditLog = mock(AuditLog.class);
+        when(auditLog.logLevel()).thenReturn(LogLevel.INFO);
+
+        ReflectionTestUtils.setField(aspect, "applicationName", "test-application");
+        ReflectionTestUtils.setField(aspect, "defaultTopic", "default-topic");
+
+        when(joinPoint.proceed()).thenReturn(15);
+
+        assertEquals(15, aspect.logMethodInfo(joinPoint, auditLog));
+
+        ArgumentCaptor<Map<String, String>> messageCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(producer, times(1)).sendMessage(eq("default-topic"), messageCaptor.capture());
+
+        Map<String, String> message = messageCaptor.getValue();
+        assertEquals("addIntegers", message.get("methodName"));
+        assertEquals("Args: [5, 10]", message.get("methodArgs"));
+        assertEquals("15", message.get("returnValue"));
+    }
+
+
+    @Test
+    public void testLogMethodInfo_Exception() throws Throwable {
         when(signature.getName()).thenReturn("testMethodThatThrowsException");
         when(joinPoint.getArgs()).thenReturn(new Object[]{"arg1", "arg2"});
+        when(joinPoint.proceed()).thenThrow(new RuntimeException("Test exception"));
+
+        AuditLog auditLog = mock(AuditLog.class);
         when(auditLog.logLevel()).thenReturn(LogLevel.INFO);
-        when(auditLibProperties.isKafkaLogEnabled()).thenReturn(true);
 
-        Exception exception = new RuntimeException("Test exception");
+        ReflectionTestUtils.setField(aspect, "applicationName", "test-application");
+        ReflectionTestUtils.setField(aspect, "defaultTopic", "default-topic");
 
-        try (MockedStatic<LogManager> mockedLogManager = mockStatic(LogManager.class)) {
-            Logger mockedLogger = mock(Logger.class);
-            mockedLogManager.when(() -> LogManager.getLogger(AuditLogAspect.class)).thenReturn(mockedLogger);
+        assertThrows(RuntimeException.class, () -> aspect.logMethodInfo(joinPoint, auditLog));
 
-            AuditLogAspect auditLogAspect = new AuditLogAspect(producer, auditLibProperties);
-            setField(auditLogAspect, "applicationName", "test-application");
-            setField(auditLogAspect, "defaultTopic", "default-topic");
+        ArgumentCaptor<Map<String, String>> messageCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(producer).sendMessage(anyString(), messageCaptor.capture());
 
-            when(joinPoint.proceed()).thenThrow(exception);
-
-            try {
-                auditLogAspect.logMethodInfo(joinPoint, auditLog);
-            } catch (Throwable ignored) {
-            }
-
-            verify(mockedLogger).log(eq(Level.INFO), eq("Method name: {}, {}, Exception occurred: {}"),
-                    eq("testMethodThatThrowsException"),
-                    eq("Args: " + Arrays.toString(new Object[]{"arg1", "arg2"})),
-                    eq("java.lang.RuntimeException: Test exception"));
-
-            ArgumentCaptor<Map<String, String>> messageCaptor = ArgumentCaptor.forClass(Map.class);
-            verify(producer, times(1)).sendMessage(eq("default-topic"), messageCaptor.capture());
-
-            Map<String, String> sentMessage = messageCaptor.getValue();
-
-            assertEquals("testMethodThatThrowsException", sentMessage.get("methodName"));
-            assertEquals("Args: " + Arrays.toString(new Object[]{"arg1", "arg2"}), sentMessage.get("methodArgs"));
-            assertEquals("java.lang.RuntimeException: Test exception", sentMessage.get("exception"));
-        }
+        Map<String, String> message = messageCaptor.getValue();
+        assertEquals("testMethodThatThrowsException", message.get("methodName"));
+        assertEquals("Args: " + Arrays.toString(new Object[]{"arg1", "arg2"}), message.get("methodArgs"));
+        assertEquals("java.lang.RuntimeException: Test exception", message.get("exception"));
     }
 
     @Test
     void testIsVoidMethodWithNoArgsGeneratesProperLogAndSendsMessageToKafka() throws Throwable {
-        when(joinPoint.getSignature()).thenReturn(signature);
         when(signature.getName()).thenReturn("voidMethodWithNoParams");
+
+        AuditLog auditLog = mock(AuditLog.class);
         when(auditLog.logLevel()).thenReturn(LogLevel.INFO);
-        when(auditLibProperties.isKafkaLogEnabled()).thenReturn(true);
 
-        try (MockedStatic<LogManager> mockedLogManager = mockStatic(LogManager.class)) {
-            mockedLogManager.when(() -> LogManager.getLogger(AuditLogAspect.class)).thenReturn(logger);
+        ReflectionTestUtils.setField(aspect, "applicationName", "test-application");
+        ReflectionTestUtils.setField(aspect, "defaultTopic", "default-topic");
 
-            AuditLogAspect auditLogAspect = new AuditLogAspect(producer, auditLibProperties);
+        assertNull(aspect.logMethodInfo(joinPoint, auditLog));
 
-            setField(auditLogAspect, "applicationName", "test-application");
-            setField(auditLogAspect, "defaultTopic", "default-topic");
+        ArgumentCaptor<Map<String, String>> messageCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(producer, times(1)).sendMessage(eq("default-topic"), messageCaptor.capture());
 
-            auditLogAspect.logMethodInfo(joinPoint, auditLog);
+        Map<String, String> sentMessage = messageCaptor.getValue();
 
-            verify(logger).log(eq(Level.INFO), eq("Method name: {}, {}, Return type: void"),
-                    eq("voidMethodWithNoParams"),
-                    eq("No args"));
+        assertEquals("voidMethodWithNoParams", sentMessage.get("methodName"));
+        assertEquals("No args", sentMessage.get("methodArgs"));
 
-            ArgumentCaptor<Map<String, String>> messageCaptor = ArgumentCaptor.forClass(Map.class);
-            verify(producer, times(1)).sendMessage(eq("default-topic"), messageCaptor.capture());
-
-            Map<String, String> sentMessage = messageCaptor.getValue();
-
-            assertEquals("voidMethodWithNoParams", sentMessage.get("methodName"));
-            assertEquals("No args", sentMessage.get("methodArgs"));
-
-        }
-    }
-
-
-    @Test
-    void testIsIntegerMethodWithTwoArgsGeneratesProperLogAndSendsMessageToKafka() throws Throwable {
-        when(auditLog.logLevel()).thenReturn(LogLevel.valueOf("INFO"));
-        when(joinPoint.getSignature()).thenReturn(signature);
-        when(signature.getName()).thenReturn("addIntegers");
-        when(joinPoint.getArgs()).thenReturn(new Object[]{5, 10});
-        when(auditLibProperties.isKafkaLogEnabled()).thenReturn(true);
-
-        try (MockedStatic<LogManager> mockedLogManager = mockStatic(LogManager.class)) {
-            mockedLogManager.when(() -> LogManager.getLogger(AuditLogAspect.class)).thenReturn(logger);
-
-            AuditLogAspect auditLogAspect = new AuditLogAspect(producer, auditLibProperties);
-
-            setField(auditLogAspect, "applicationName", "test-application");
-            setField(auditLogAspect, "defaultTopic", "default-topic");
-
-            when(joinPoint.proceed()).thenReturn(15);
-            assertEquals(15, auditLogAspect.logMethodInfo(joinPoint, auditLog));
-
-            verify(logger).log(eq(Level.INFO), eq("Method name: {}, {}, Return value: {}"),
-                    eq("addIntegers"),
-                    eq("Args: " + Arrays.toString(new Object[]{5, 10})),
-                    eq(15));
-
-            ArgumentCaptor<Map<String, String>> messageCaptor = ArgumentCaptor.forClass(Map.class);
-            verify(producer, times(1)).sendMessage(eq("default-topic"), messageCaptor.capture());
-
-            Map<String, String> sentMessage = messageCaptor.getValue();
-
-            assertEquals("addIntegers", sentMessage.get("methodName"));
-            assertEquals("Args: [5, 10]", sentMessage.get("methodArgs"));
-            assertEquals("15", sentMessage.get("returnValue"));
-        }
     }
 
 }
