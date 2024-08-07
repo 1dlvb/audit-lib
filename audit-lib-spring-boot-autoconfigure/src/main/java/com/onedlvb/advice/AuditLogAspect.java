@@ -54,8 +54,7 @@ public class AuditLogAspect {
     @Around("@annotation(auditLog)")
     public Object logMethodInfo(ProceedingJoinPoint joinPoint, AuditLog auditLog) throws Throwable {
         String methodName = joinPoint.getSignature().getName();
-        Object[] methodArgs = joinPoint.getArgs();
-        String methodArgsLog = formatMethodArgs(methodArgs);
+        String methodArgsLog = formatMethodArgs(joinPoint.getArgs());
 
         Map<String, String> message = createMessageForKafka(methodName, methodArgsLog);
 
@@ -99,7 +98,10 @@ public class AuditLogAspect {
     }
 
     private void logMethodWithException(Level level, String methodName, String methodArgsLog, Throwable throwable) {
-        LOGGER.log(level, "Method name: {}, {}, Exception occurred: {}", methodName, methodArgsLog, throwable);
+        LOGGER.log(level, "Method name: {}, {}, Exception occurred: {}",
+                methodName,
+                methodArgsLog,
+                throwable.toString());
     }
 
     private static String formatMethodArgs(Object[] methodArgs) {
