@@ -7,10 +7,11 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
@@ -26,7 +27,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class AuditLogAspectTests {
+@ExtendWith(MockitoExtension.class)
+class AuditLogAspectTests {
 
     @Mock
     private AuditProducer producer;
@@ -44,14 +46,13 @@ public class AuditLogAspectTests {
     private Signature signature;
 
     @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
+    void setUp() {
         when(joinPoint.getSignature()).thenReturn(signature);
         when(properties.isKafkaLogEnabled()).thenReturn(true);
     }
 
     @Test
-    public void testIsIntegerMethodWithTwoArgsGeneratesProperLogAndSendsMessageToKafka() throws Throwable {
+    void testIsIntegerMethodWithTwoArgsGeneratesProperLogAndSendsMessageToKafka() throws Throwable {
         when(signature.getName()).thenReturn("addIntegers");
         when(joinPoint.getArgs()).thenReturn(new Object[]{5, 10});
         when(joinPoint.proceed()).thenReturn("returnValue");
@@ -77,7 +78,7 @@ public class AuditLogAspectTests {
 
 
     @Test
-    public void testLogMethodInfo_Exception() throws Throwable {
+    void testMethodInvocationWhenExceptionThrownAndCorrectExceptionLoggedAndSendsMessageToKafka() throws Throwable {
         when(signature.getName()).thenReturn("testMethodThatThrowsException");
         when(joinPoint.getArgs()).thenReturn(new Object[]{"arg1", "arg2"});
         when(joinPoint.proceed()).thenThrow(new RuntimeException("Test exception"));
