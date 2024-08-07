@@ -21,18 +21,14 @@ public class MessageListenerServiceImpl implements MessageListenerService {
     @Override
     @KafkaListener(topicPattern = "fintech-topic-.*")
     public void listen(ConsumerRecord<String, String> record) {
-        try {
-            String topic = record.topic();
-            String message = record.value();
-            KafkaMessage kafkaMessage = KafkaMessage.builder()
-                    .topic(topic)
-                    .message(message)
-                    .createDate(LocalDateTime.now())
-                    .build();
-            kafkaMessageRepository.save(kafkaMessage);
-        } catch (Exception ignored) {
-        }
-
+        String topic = record.topic();
+        String message = record.value();
+        KafkaMessage kafkaMessage = KafkaMessage.builder()
+                .topic(topic)
+                .message(message)
+                .createDate(LocalDateTime.now())
+                .build();
+        kafkaMessageRepository.save(kafkaMessage);
     }
 
 }
