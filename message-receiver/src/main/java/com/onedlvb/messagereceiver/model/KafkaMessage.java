@@ -14,6 +14,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Entity for messages, that should be saved to the database.
+ * @author Matushkin Anton
+ */
 @Data
 @Entity
 @Builder

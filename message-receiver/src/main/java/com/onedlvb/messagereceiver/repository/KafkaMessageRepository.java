@@ -6,6 +6,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
+/**
+ * A repository for KafkaMessages
+ * @see KafkaMessage
+ * @author Matushkin Anton
+ */
 @Repository
 public interface KafkaMessageRepository extends JpaRepository<KafkaMessage, UUID> {
 }

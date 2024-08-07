@@ -11,6 +11,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
+/**
+ * An implementation of {@link MessageListenerService} interface.
+ * @author Matushkin Anton
+ */
 @Service
 @RequiredArgsConstructor
 public class MessageListenerServiceImpl implements MessageListenerService {

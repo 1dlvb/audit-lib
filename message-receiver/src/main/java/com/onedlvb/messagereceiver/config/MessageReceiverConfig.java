@@ -8,6 +8,10 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import java.util.Objects;
 
+/**
+ * Configurations for the microservice.
+ * @author Matushkin Anton
+ */
 @Configuration
 public class MessageReceiverConfig {
 

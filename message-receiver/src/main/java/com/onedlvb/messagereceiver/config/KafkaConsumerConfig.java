@@ -15,6 +15,10 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Configurations for Kafka's consumer.
+ * @author Matushkin Anton
+ */
 @EnableKafka
 @Configuration
 public class KafkaConsumerConfig {
