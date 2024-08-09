@@ -17,6 +17,10 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+/**
+ * Custom kafka cluster for tests
+ * @author Matushkin Anton
+ */
 public class CustomKafkaContainerCluster implements Startable {
 
     private final int numberOfBrokers;
