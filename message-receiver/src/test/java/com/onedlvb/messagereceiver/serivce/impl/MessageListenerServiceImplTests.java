@@ -9,6 +9,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.support.Acknowledgment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -21,6 +22,8 @@ class MessageListenerServiceImplTests {
     private KafkaMessageRepository kafkaMessageRepository;
     @InjectMocks
     private MessageListenerServiceImpl messageListenerService;
+    @Mock
+    private Acknowledgment acknowledgment;
 
     @Test
     void testListenReceivesAndSavesMessages() {
@@ -31,7 +34,7 @@ class MessageListenerServiceImplTests {
                 "key1",
                 "value1");
 
-        messageListenerService.listen(record);
+        messageListenerService.listen(record, acknowledgment);
 
         ArgumentCaptor<KafkaMessage> captor = ArgumentCaptor.forClass(KafkaMessage.class);
         verify(kafkaMessageRepository).save(captor.capture());
@@ -41,7 +44,7 @@ class MessageListenerServiceImplTests {
         assertEquals("fintech-topic-test", capturedMessage.getTopic());
         assertEquals("value1", capturedMessage.getMessage());
         assertNotNull(capturedMessage.getCreateDate());
-
+        verify(acknowledgment).acknowledge();
     }
 
 }
