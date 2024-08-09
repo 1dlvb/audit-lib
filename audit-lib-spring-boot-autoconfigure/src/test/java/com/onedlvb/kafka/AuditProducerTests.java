@@ -37,7 +37,7 @@ import static org.springframework.test.util.ReflectionTestUtils.setField;
 @Import(AuditLibSpringBootStarterAutoConfiguration.class)
 class AuditProducerTests {
 
-    public static final String TOPIC_NAME_SEND_ORDER = "send-auditlog-event";
+    public static final String TOPIC = "fintech-topic-test";
     private static String bootstrapServers;
     private static String ports;
 
@@ -67,7 +67,7 @@ class AuditProducerTests {
                 new StringDeserializer(),
                 new StringDeserializer());
 
-        consumer.subscribe(Collections.singletonList(TOPIC_NAME_SEND_ORDER));
+        consumer.subscribe(Collections.singletonList(TOPIC));
 
     }
 
@@ -85,7 +85,7 @@ class AuditProducerTests {
                 "key3", "val3"
         );
 
-        auditProducer.sendMessage(TOPIC_NAME_SEND_ORDER, message);
+        auditProducer.sendMessage(TOPIC, message);
 
         ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(10000L));
 
@@ -116,7 +116,7 @@ class AuditProducerTests {
         Thread.sleep(10000);
 
         setField(auditProducer, "bootstrapServers", bootstrapServers);
-        auditProducer.sendMessage(TOPIC_NAME_SEND_ORDER, message);
+        auditProducer.sendMessage(TOPIC, message);
 
         // Undo blocking connections for port
         Runtime.getRuntime().exec(String.format("sudo iptables -D OUTPUT -p tcp --dport %s -j DROP", ports));
@@ -142,7 +142,7 @@ class AuditProducerTests {
         );
 
         setField(auditProducer, "bootstrapServers", bootstrapServers);
-        auditProducer.sendMessage(TOPIC_NAME_SEND_ORDER, message);
+        auditProducer.sendMessage(TOPIC, message);
 
         ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(10000L));
 
