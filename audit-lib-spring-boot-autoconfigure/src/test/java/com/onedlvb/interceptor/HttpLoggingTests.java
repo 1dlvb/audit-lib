@@ -28,7 +28,7 @@ import java.util.List;
 
 @WebMvcTest(HttpLoggingTests.AuditLogHttpTestController.class)
 @ContextConfiguration(classes = {HttpLoggingTests.AuditLogHttpTestController.class, AuditLibSpringBootStarterAutoConfiguration.class})
-public class HttpLoggingTests {
+class HttpLoggingTests {
 
     @Autowired
     private MockMvc mockMvc;
@@ -36,7 +36,7 @@ public class HttpLoggingTests {
     private TestAppender testAppender;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         LoggerContext context = (LoggerContext) LogManager.getContext(false);
         Configuration config = context.getConfiguration();
         testAppender = new TestAppender("TestAppender");
@@ -48,7 +48,7 @@ public class HttpLoggingTests {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         LoggerContext context = (LoggerContext) LogManager.getContext(false);
         Configuration config = context.getConfiguration();
         LoggerConfig loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
@@ -111,27 +111,10 @@ public class HttpLoggingTests {
         @GetMapping("/get-with-two-args-returns-double")
         public String getMappingWithNoArgsReturnsStringMethod(@RequestParam("arg1") Integer arg1,
                                                               @RequestParam("arg2") Integer arg2) {
-            return String.valueOf((double)arg1/arg2)    ;
+            return String.valueOf((double) arg1 / arg2);
         }
 
 
     }
 
 }
-
-//    @Test
-//    void testPostRequestToGetMappingWithNoArgsReturnsStringStatus405() throws Exception {
-//        mockMvc.perform(post("/get-with-no-args", "Argument"));
-//        List<LogEvent> logEvents = TestAppender.getLogEvents();
-//        assertThat(TestAppender.getLogEvents()).isNotEmpty();
-//        for (LogEvent l: logEvents) {
-//            System.out.println(l.getMessage().getFormattedMessage());
-//        }
-//
-//        assertTrue(logEvents.stream()
-//                .anyMatch(event -> event.getMessage().getFormattedMessage().contains(
-//                        "POST Status code: 405")));
-//        assertTrue(logEvents.stream()
-//                .anyMatch(event -> event.getLevel().equals(Level.DEBUG)));
-//    }
-//

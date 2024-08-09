@@ -8,12 +8,15 @@ import com.onedlvb.advice.annotation.AuditLogHttp;
 import com.onedlvb.appender.CustomConsoleAppender;
 import com.onedlvb.appender.CustomFileAppender;
 import com.onedlvb.interceptor.HttpInterceptor;
+import com.onedlvb.kafka.AuditProducer;
+import lombok.NonNull;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -29,9 +32,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 /**
  * Class for autoconfiguring Spring Starter
  * <ul>
- *     <li>To turn on console logging set auditlog.console.enabled=true</li>
- *     <li>To turn on file logging set auditlog.file.enabled=true</li>
- *     <li>To specify file for logs set auditlog.file.path=path...</li>
+ *     <li>To turn on console logging set audit-lib-spring-boot-starter..console-enabled=true</li>
+ *     <li>To turn on file logging set audit-lib-spring-boot-starter.file-enabled=true</li>
+ *     <li>To turn on messaging to kafka set audit-lib-spring-boot-starter.kafka-log-enabled=true</li>
+ *     <li>Set up the path for logs: audit-lib-spring-boot-starter.file-path=...</li>
+ *     <li>Set up the transactional id: audit-lib-spring-boot-starter.kafka-transactional-id=yourID</li>
  * </ul>
  * Configure these variables in application.properties file.
  * @author Matushkin Anton
@@ -43,18 +48,21 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @ConditionalOnClass({AuditLog.class, AuditLogHttp.class})
 public class AuditLibSpringBootStarterAutoConfiguration implements WebMvcConfigurer {
 
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String bootstrapServers;
 
+    @NonNull
     private final AuditLibProperties properties;
 
-    public AuditLibSpringBootStarterAutoConfiguration(AuditLibProperties properties) {
+    public AuditLibSpringBootStarterAutoConfiguration(@NonNull AuditLibProperties properties) {
         this.properties = properties;
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public AuditLogAspect auditLogAdvice() {
+    public AuditLogAspect auditLogAspect() {
         configureLoggers();
-        return new AuditLogAspect();
+        return new AuditLogAspect(auditProducer(), properties);
     }
 
     @Bean
@@ -67,6 +75,11 @@ public class AuditLibSpringBootStarterAutoConfiguration implements WebMvcConfigu
     @ConditionalOnMissingBean
     public CustomRequestBodyAdvice customRequestBodyAdvice() {
         return new CustomRequestBodyAdvice();
+    }
+
+    @Bean
+    public AuditProducer auditProducer() {
+        return new AuditProducer(properties);
     }
 
     @Override
