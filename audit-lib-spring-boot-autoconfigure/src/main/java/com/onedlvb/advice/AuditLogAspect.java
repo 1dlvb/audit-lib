@@ -1,6 +1,7 @@
 package com.onedlvb.advice;
 
 import com.onedlvb.advice.annotation.AuditLog;
+import com.onedlvb.advice.exception.KafkaSendMessageException;
 import com.onedlvb.config.AuditLibProperties;
 import com.onedlvb.kafka.AuditProducer;
 import com.onedlvb.util.LevelConverter;
@@ -78,7 +79,7 @@ public class AuditLogAspect {
      * <p>
      * @param message message that should be sent to the Kafka
      */
-    private void sendKafkaMessage(Map<String, String> message) {
+    private void sendKafkaMessage(Map<String, String> message) throws KafkaSendMessageException {
         if (properties.isKafkaLogEnabled()) {
             producer.sendMessage(defaultTopic, message);
         }
