@@ -1,0 +1,38 @@
+{
+  "properties": [
+    {
+      "name": "audit-lib-spring-boot-starter.console-enabled",
+      "type": "java.lang.Boolean",
+      "description": "True to enable console logging, false to disable."
+    },
+    {
+      "name": "audit-lib-spring-boot-starter.file-enabled",
+      "type": "java.lang.Boolean",
+      "description": "True to enable file logging, false to disable."
+    },
+    {
+      "name": "audit-lib-spring-boot-starter.kafka-log-enabled",
+      "type": "java.lang.Boolean",
+      "description": "True to enable kafka logging, false to disable."
+    },
+    {
+      "name": "audit-lib-spring-boot-starter.file-path",
+      "type": "java.lang.String",
+      "description": "Path for logging file."
+    },
+    {
+      "name": "kafka.consumer.concurrency",
+      "type": "java.lang.String",
+      "description": "Description for kafka.consumer.concurrency."
+    },
+    {
+      "name": "kafka.consumer.poll-timeout",
+      "type": "java.lang.String",
+      "description": "Description for kafka.consumer.poll-timeout."
+    },
+    {
+      "name": "audit-lib-spring-boot-starter.kafka-transactional-id",
+      "type": "java.lang.String",
+      "description": "Description for audit-lib-spring-boot-starter.kafka-transactional-id."
+    }
+  ] }
