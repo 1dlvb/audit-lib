@@ -10,8 +10,6 @@ import com.onedlvb.appender.CustomFileAppender;
 import com.onedlvb.interceptor.HttpInterceptor;
 import com.onedlvb.kafka.AuditProducer;
 import lombok.NonNull;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
@@ -27,14 +25,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
-import org.springframework.kafka.transaction.KafkaTransactionManager;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.HashMap;
 
 
 /**
@@ -70,7 +62,7 @@ public class AuditLibSpringBootStarterAutoConfiguration implements WebMvcConfigu
     @ConditionalOnMissingBean
     public AuditLogAspect auditLogAspect() {
         configureLoggers();
-        return new AuditLogAspect(auditProducer(kafkaTemplate()), properties);
+        return new AuditLogAspect(auditProducer(), properties);
     }
 
     @Bean
@@ -86,34 +78,8 @@ public class AuditLibSpringBootStarterAutoConfiguration implements WebMvcConfigu
     }
 
     @Bean
-    public ProducerFactory<String, String> producerFactory() {
-        HashMap<String, Object> props = new HashMap<>();
-        String defaultTransactionalId = "default-transactional-id";
-        if (properties.getKafkaTransactionalId() != null) {
-            defaultTransactionalId = properties.getKafkaTransactionalId();
-        }
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        props.put(ProducerConfig.ACKS_CONFIG, "all");
-        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
-        props.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, defaultTransactionalId);
-        return new DefaultKafkaProducerFactory<>(props);
-    }
-
-    @Bean
-    public KafkaTemplate<String, String> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
-    }
-
-    @Bean
-    public AuditProducer auditProducer(KafkaTemplate<String, String> kafkaTemplate) {
-        return new AuditProducer(kafkaTemplate);
-    }
-
-    @Bean
-    public KafkaTransactionManager<String, String> kafkaTransactionManager() {
-        return new KafkaTransactionManager<>(producerFactory());
+    public AuditProducer auditProducer() {
+        return new AuditProducer(properties);
     }
 
     @Override
