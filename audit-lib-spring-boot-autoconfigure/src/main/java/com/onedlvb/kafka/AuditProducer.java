@@ -55,6 +55,9 @@ public class AuditProducer {
 
     }
 
+    /**
+     * @return configured producer.
+     */
     private KafkaProducer<String, String> getKafkaProducer() {
         String defaultTransactionalId = "default-transactional-id";
         if (properties.getKafkaTransactionalId() != null) {
