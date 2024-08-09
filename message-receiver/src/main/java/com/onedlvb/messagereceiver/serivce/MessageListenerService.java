@@ -1,6 +1,7 @@
 package com.onedlvb.messagereceiver.serivce;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.springframework.kafka.support.Acknowledgment;
 
 /**
  * Service interface for processing incoming Kafka messages.
@@ -17,6 +18,6 @@ public interface MessageListenerService {
      *
      * @param record the Kafka {@link ConsumerRecord} containing the message details
      */
-    void listen(ConsumerRecord<String, String> record);
+    void listen(ConsumerRecord<String, String> record, Acknowledgment acknowledgment);
 
 }

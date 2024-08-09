@@ -7,6 +7,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,8 +24,8 @@ public class MessageListenerServiceImpl implements MessageListenerService {
     private final KafkaMessageRepository kafkaMessageRepository;
 
     @Override
-    @KafkaListener(topicPattern = "fintech-topic-.*")
-    public void listen(ConsumerRecord<String, String> record) {
+    @KafkaListener(id = "MessageListener", topicPattern = "fintech-topic-.*")
+    public void listen(ConsumerRecord<String, String> record, Acknowledgment acknowledgment) {
         String topic = record.topic();
         String message = record.value();
         KafkaMessage kafkaMessage = KafkaMessage.builder()
@@ -33,6 +34,7 @@ public class MessageListenerServiceImpl implements MessageListenerService {
                 .createDate(LocalDateTime.now())
                 .build();
         kafkaMessageRepository.save(kafkaMessage);
+        acknowledgment.acknowledge();
     }
 
 }
