@@ -17,6 +17,7 @@ public interface MessageListenerService {
      * </p>
      *
      * @param record the Kafka {@link ConsumerRecord} containing the message details
+     * @param acknowledgment the Kafka {@link Acknowledgment}
      */
     void listen(ConsumerRecord<String, String> record, Acknowledgment acknowledgment);
 
