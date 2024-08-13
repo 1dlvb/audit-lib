@@ -1,4 +1,4 @@
-package com.onedlvb.messagereceiver.serivce.impl;
+package com.onedlvb.messagereceiver.util;
 
 import lombok.Getter;
 import lombok.SneakyThrows;
