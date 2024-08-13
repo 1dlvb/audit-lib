@@ -13,7 +13,6 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
-import org.springframework.web.servlet.ModelAndView;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
@@ -48,13 +47,6 @@ public class HttpInterceptor implements HandlerInterceptor {
         return true;
     }
 
-    @Override
-    public void postHandle(@NonNull HttpServletRequest request,
-                           @NonNull HttpServletResponse response,
-                           @NonNull Object handler,
-                           ModelAndView modelAndView) throws Exception {
-    }
-
     /**
      *  * After-completion method that logs the status code of the response along with any request or response bodies.
      * @param request   The HTTP request
@@ -62,7 +54,6 @@ public class HttpInterceptor implements HandlerInterceptor {
      * @param handler   The handler     that processed the request
      * @param ex        Any exception that was thrown during processing of the request
      * @throws Exception
-
      */
     @Override
     public void afterCompletion(@NonNull HttpServletRequest request,
