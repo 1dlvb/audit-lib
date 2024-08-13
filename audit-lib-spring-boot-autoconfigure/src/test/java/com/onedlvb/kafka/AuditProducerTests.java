@@ -1,8 +1,10 @@
 package com.onedlvb.kafka;
 
-import com.onedlvb.CustomKafkaContainerCluster;
 import com.onedlvb.advice.exception.KafkaSendMessageException;
 import com.onedlvb.config.AuditLibSpringBootStarterAutoConfiguration;
+import com.onedlvb.util.CustomKafkaContainerCluster;
+import com.onedlvb.util.SpringContextRestartExtension;
+import com.onedlvb.util.SpringRestarter;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -16,16 +18,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,14 +37,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
 @Testcontainers
-@ExtendWith(SpringExtension.class)
+@SpringJUnitConfig
 @Import(AuditLibSpringBootStarterAutoConfiguration.class)
+@ExtendWith({SpringExtension.class, SpringContextRestartExtension.class})
 class AuditProducerTests {
 
-    public static final String TOPIC = "fintech-topic-test";
+    private static final String TOPIC = "fintech-topic-test";
     private static String bootstrapServers;
-    private static String ports;
-
     private KafkaConsumer<String, String> consumer;
 
     @Autowired
@@ -54,7 +57,6 @@ class AuditProducerTests {
                         2);
         kafka.start();
         bootstrapServers = kafka.getKafkaBootstrapServers();
-        ports = bootstrapServers.split(":")[1];
     }
 
     @BeforeEach
@@ -72,8 +74,7 @@ class AuditProducerTests {
     }
 
     @AfterEach
-    void teardown() throws IOException {
-        Runtime.getRuntime().exec(String.format("sudo iptables -D OUTPUT -p tcp --dport %s -j DROP", ports));
+    void teardown() {
         consumer.close();
     }
 
@@ -99,8 +100,8 @@ class AuditProducerTests {
     }
 
     @Test
-    void testAuditProducerReturnsSavedDataAfterRecoveryOfBrokerFailure()
-            throws InterruptedException, KafkaSendMessageException, IOException {
+    void testAuditProducerReturnsSavedDataAfterRecoveryOfBrokerFailure() {
+
         Map<String, String> message = Map.of(
                 "key1", "val1",
                 "key2", "val2",
@@ -109,28 +110,28 @@ class AuditProducerTests {
 
         ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(10000L));
         assertEquals(0, records.count());
+        SpringRestarter.getInstance().restart(() -> {
+            setField(auditProducer, "bootstrapServers", bootstrapServers);
+            try {
+                auditProducer.sendMessage(TOPIC, message);
+            } catch (KafkaSendMessageException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
-        // Blocking connections for port
-        Runtime.getRuntime().exec(String.format("sudo iptables -A OUTPUT -p tcp --dport %s -j DROP", ports));
+        Awaitility.await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
+            ConsumerRecords<String, String> newRecords = consumer.poll(Duration.ofMillis(10000L));
+            boolean containsMessage = false;
+            for (ConsumerRecord<String, String> record : newRecords) {
+                if (record.value().contains("key1") && record.value().contains("val1") &&
+                        record.value().contains("key2") && record.value().contains("val2") &&
+                        record.value().contains("key3") && record.value().contains("val3")) {
+                    containsMessage = true;
+                }
+            }
+            assertTrue(containsMessage);
+        });
 
-        Thread.sleep(10000);
-
-        setField(auditProducer, "bootstrapServers", bootstrapServers);
-        auditProducer.sendMessage(TOPIC, message);
-
-        // Undo blocking connections for port
-        Runtime.getRuntime().exec(String.format("sudo iptables -D OUTPUT -p tcp --dport %s -j DROP", ports));
-
-        Thread.sleep(10000);
-
-        ConsumerRecords<String, String> newRecords = consumer.poll(Duration.ofMillis(10000L));
-
-        assertTrue(newRecords.count() > 0);
-        for (ConsumerRecord<String, String> record : newRecords) {
-            assertThat(record.value()).contains("key1", "val1");
-            assertThat(record.value()).contains("key2", "val2");
-            assertThat(record.value()).contains("key3", "val3");
-        }
     }
 
     @Test
