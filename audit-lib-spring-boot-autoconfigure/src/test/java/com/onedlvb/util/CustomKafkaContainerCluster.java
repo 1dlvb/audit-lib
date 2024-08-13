@@ -1,4 +1,4 @@
-package com.onedlvb;
+package com.onedlvb.util;
 
 import lombok.Getter;
 import lombok.SneakyThrows;
