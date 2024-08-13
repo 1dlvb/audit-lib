@@ -2,6 +2,7 @@ package com.onedlvb.messagereceiver.serivce.impl;
 
 import com.onedlvb.messagereceiver.model.KafkaMessage;
 import com.onedlvb.messagereceiver.repository.KafkaMessageRepository;
+import com.onedlvb.messagereceiver.util.CustomKafkaContainerCluster;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,16 +17,16 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.MessageListenerContainer;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,11 +44,6 @@ class MessageListenerServiceImplIntegrationTests {
     private MessageListenerContainer consumer;
 
     private static String bootstrapServers;
-    @Container
-    public static KafkaContainer kafkaContainer = new KafkaContainer(
-            DockerImageName.parse("confluentinc/cp-kafka:latest")
-    )
-            .withExposedPorts(9093);
 
     @Container
     static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest")
@@ -83,10 +79,11 @@ class MessageListenerServiceImplIntegrationTests {
     @BeforeEach
     void setupConsumer() {
         consumer = kafkaListenerEndpointRegistry.getListenerContainer("MessageListener");
+        kafkaMessageRepository.deleteAll();
     }
 
     @Test
-    void testConsumerReturnsProperSavedMessage() throws InterruptedException {
+    void testConsumerReturnsProperSavedMessage() {
         consumer.start();
         Map<String, String> message = Map.of(
                 "key1", "val1",
@@ -101,10 +98,12 @@ class MessageListenerServiceImplIntegrationTests {
             assertEquals(m.getMessage(), message.toString());
             assertEquals(m.getTopic(), "fintech-topic-test");
         }
+        consumer.stop();
+
     }
 
     @Test
-    void testConsumerReturnsProperSavedMessageAfterConsumerFailureInProperOrder() throws InterruptedException {
+    void testConsumerHandlesMessagesCorrectlyAfterRestart() {
         // imitating consumer failure
         consumer.stop();
         Map<String, String> message1 = new LinkedHashMap<>();
@@ -124,7 +123,7 @@ class MessageListenerServiceImplIntegrationTests {
         // undo imitating consumer failure
         consumer.start();
 
-        Thread.sleep(5000);
+        Awaitility.await().atMost(10, TimeUnit.SECONDS).pollDelay(5, TimeUnit.SECONDS).until(() -> true);
 
         List<KafkaMessage> messages = kafkaMessageRepository.findAll();
         assertTrue(messages.get(0).getMessage().contains("key1"));
@@ -133,15 +132,14 @@ class MessageListenerServiceImplIntegrationTests {
 
     }
 
-
     @SafeVarargs
-    private void sendMessage(Map<String, String> ... messages) throws InterruptedException {
+    private void sendMessage(Map<String, String> ... messages) {
         KafkaTemplate<String, String> template = kafkaTemplate(bootstrapServers);
-        Thread.sleep(5000);
+        Awaitility.await().atMost(10, TimeUnit.SECONDS).pollDelay(5, TimeUnit.SECONDS).until(() -> true);
         for (Map<String, String> message: messages) {
             template.send("fintech-topic-test", String.valueOf(message));
         }
-        Thread.sleep(5000);
+        Awaitility.await().atMost(10, TimeUnit.SECONDS).pollDelay(5, TimeUnit.SECONDS).until(() -> true);
     }
 
     private static KafkaTemplate<String, String> kafkaTemplate(String bootstrapServers) {
