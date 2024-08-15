@@ -16,6 +16,10 @@ public class AuditLibProperties {
 
     private boolean fileEnabled;
 
+    private boolean kafkaLogEnabled;
+
+    private String kafkaTransactionalId;
+
     private String filePath;
 
 }
